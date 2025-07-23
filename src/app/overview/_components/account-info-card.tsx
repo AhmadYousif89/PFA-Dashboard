@@ -24,9 +24,7 @@ export const AccountSummary = () => {
             >
               {isCurrent ? "Current Balance" : key}
             </p>
-            <h2
-              className={`text-32 ${isCurrent ? "text-card" : "text-card-foreground"}`}
-            >
+            <h2 className={`text-32 ${isCurrent ? "text-card" : "text-card-foreground"}`}>
               {value.toLocaleString("en-US", {
                 style: "currency",
                 currency: "USD",

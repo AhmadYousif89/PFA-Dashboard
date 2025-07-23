@@ -34,10 +34,7 @@ export const BudgetsSummary = () => {
   return (
     <div className="flex min-h-72.5 flex-col gap-4 @[22rem]/card-content:flex-row">
       <div className="grid grow items-center justify-center self-center">
-        <ChartContainer
-          config={chartConfig}
-          className="col-end-1 row-end-1 min-h-60 max-w-61.75"
-        >
+        <ChartContainer config={chartConfig} className="col-end-1 row-end-1 min-h-60 max-w-61.75">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               {/* Inner ring with lighter colors */}
@@ -96,28 +93,16 @@ export const BudgetsSummary = () => {
         {/* Center text */}
         <div className="col-end-1 row-end-1 flex flex-col items-center place-self-center">
           <span className="text-32">${total}</span>
-          <p className="text-muted-foreground text-12">
-            of ${limit.toLocaleString()} limit
-          </p>
+          <p className="text-muted-foreground text-12">of ${limit.toLocaleString()} limit</p>
         </div>
       </div>
       {/* Legend */}
-      <ul
-        className={cn(
-          "grid grid-cols-2 gap-4",
-          "@[22rem]/card-content:grid-cols-1",
-        )}
-      >
+      <ul className={cn("grid grid-cols-2 gap-4", "@[22rem]/card-content:grid-cols-1")}>
         {budgets.map((item, index) => (
           <li key={index} className="flex items-center gap-4">
-            <div
-              className="h-11 min-w-1 rounded"
-              style={{ backgroundColor: item.theme }}
-            />
+            <div className="h-11 min-w-1 rounded" style={{ backgroundColor: item.theme }} />
             <div className="flex flex-col gap-1">
-              <span className="text-muted-foreground text-12">
-                {item.category}
-              </span>
+              <span className="text-muted-foreground text-12">{item.category}</span>
               <span className="text-14-bold">
                 {item.maximum.toLocaleString("en-US", {
                   style: "currency",
