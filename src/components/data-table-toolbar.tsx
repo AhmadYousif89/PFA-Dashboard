@@ -1,0 +1,221 @@
+import { Fragment, useRef, useState, useTransition } from "react";
+
+import { cn } from "@/lib/utils";
+import { useUrlState } from "@/hooks/use-url-state";
+import { SortFormat, type SortTransactionBy } from "@/lib/types";
+
+import SpinnerIcon from "public/assets/images/icon-spinner.svg";
+import SearchIcon from "public/assets/images/icon-search.svg";
+import SortIcon from "public/assets/images/icon-sort-mobile.svg";
+import FilterIcon from "public/assets/images/icon-filter-mobile.svg";
+import CaretDownIcon from "public/assets/images/icon-caret-down.svg";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+
+export const sortBy = ["Latest", "Oldest", "A to Z", "Z to A", "Highest", "Lowest"] as const;
+export const sortMap: { [key in SortTransactionBy]: SortFormat | null } = {
+  Latest: "date:desc",
+  Oldest: "date:asc",
+  "A to Z": "name:asc",
+  "Z to A": "name:desc",
+  Highest: "amount:desc",
+  Lowest: "amount:asc",
+} as const;
+
+export const categories = [
+  "All Transactions",
+  "Entertainment",
+  "Bills",
+  "Groceries",
+  "Dining Out",
+  "Transportation",
+  "Personal Care",
+  "Education",
+  "Lifestyle",
+  "Shopping",
+  "General",
+] as const;
+
+export const DataTableToolbar = () => {
+  const { getParam, updateURL } = useUrlState();
+  const timeoutRef = useRef<NodeJS.Timeout>(undefined);
+  const [isPending, startTransition] = useTransition();
+
+  const searchQuery = getParam("query") || "";
+  const sortQuery = getParam("sort") || "Latest";
+  const categoryQuery = getParam("category") || "All Transactions";
+  const [search, setSearch] = useState(searchQuery);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearch(query);
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      if ((query && query.trim() !== "") || searchQuery !== "")
+        startTransition(() => {
+          updateURL({ query: query.trim(), page: null });
+        });
+    }, 300);
+  };
+
+  const handleSortChange = (sort: SortTransactionBy) => {
+    let newSort = null;
+    if (sort in sortMap) {
+      newSort = sortMap[sort];
+    }
+    if (newSort !== sortQuery) {
+      updateURL({ sort: newSort, page: null });
+    }
+  };
+
+  const handleCategoryChange = (category: (typeof categories)[number]) => {
+    updateURL({
+      category: category === "All Transactions" ? null : category,
+      page: null,
+    });
+  };
+
+  const reverseSortMap = Object.entries(sortMap).reduce(
+    (acc, [key, value]) => {
+      if (value) acc[value] = key as SortTransactionBy;
+      return acc;
+    },
+    {} as Record<SortFormat, SortTransactionBy>,
+  );
+
+  const currentSort =
+    sortQuery && sortQuery in reverseSortMap ? reverseSortMap[sortQuery as SortFormat] : "Latest";
+
+  return (
+    <header className="flex items-center justify-between gap-6">
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className="border-border grid max-w-xs grow place-items-center rounded-md border"
+      >
+        <Label
+          htmlFor="search-table"
+          className="bg-card z-10 col-end-1 row-end-1 mr-px grid size-10 place-items-center justify-self-end rounded-md"
+        >
+          {isPending ? (
+            <SpinnerIcon className="fill-foreground size-4 animate-spin" />
+          ) : (
+            <SearchIcon className="size-4" />
+          )}
+        </Label>
+        <Input
+          name="search"
+          type="search"
+          id="search-table"
+          className="col-end-1 row-end-1"
+          placeholder="Search transaction"
+          onChange={handleSearchChange}
+          value={search}
+        />
+      </form>
+      <div className="flex items-center gap-6 md:min-w-109.5">
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-14 text-muted-foreground hidden md:inline-block">Sort By</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className={cn(
+                  "group size-5 rounded-none",
+                  "md:data-[state=open]:bg-accent/50 md:h-11.25 md:min-w-28.25 md:gap-4 md:rounded-md md:border",
+                )}
+              >
+                <span className="text-input group-hover:text-accent-foreground group-data-[state=open]:text-accent-foreground hidden md:inline-block">
+                  {currentSort}
+                </span>
+                <span className="grid w-8 place-items-center md:size-4">
+                  <SortIcon className="md:hidden" />
+                  <CaretDownIcon
+                    className={cn(
+                      "hidden h-2 w-3 *:size-0 md:grid",
+                      "[&_path]:fill-input group-hover:[&_path]:fill-accent-foreground group-data-[state=open]:[&_path]:fill-accent-foreground",
+                      "transition-transform group-data-[state=open]:rotate-180",
+                    )}
+                  />
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="min-w-28.25 px-5 py-3" sideOffset={16} align="end">
+              <DropdownMenuLabel className="md:hidden">Sort By</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-muted my-1.5 md:hidden" />
+              {sortBy.map((item) => (
+                <Fragment key={item}>
+                  <DropdownMenuItem
+                    className={`text-14 ${currentSort === item ? "bg-accent/50 font-bold" : ""}`}
+                    onClick={() => handleSortChange(item)}
+                  >
+                    {item}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-muted my-1.5 last:hidden" />
+                </Fragment>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-14 text-muted-foreground hidden md:inline-block">Category</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className={cn(
+                  "group size-5 rounded-none",
+                  "md:data-[state=open]:bg-accent/50 md:h-11.25 md:min-w-44.25 md:gap-4 md:rounded-md md:border",
+                )}
+              >
+                <span className="text-input group-hover:text-accent-foreground group-data-[state=open]:text-accent-foreground hidden md:inline-block">
+                  {categoryQuery}
+                </span>
+                <span className="grid w-8 place-items-center md:size-4">
+                  <FilterIcon className="md:hidden" />
+                  <CaretDownIcon
+                    className={cn(
+                      "hidden h-2 w-3 *:size-0 md:grid",
+                      "[&_path]:fill-input group-hover:[&_path]:fill-accent-foreground group-data-[state=open]:[&_path]:fill-accent-foreground",
+                      "transition-transform group-data-[state=open]:rotate-180",
+                    )}
+                  />
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="max-h-75 min-w-44.25 px-5 py-3"
+              sideOffset={16}
+              align="end"
+            >
+              <DropdownMenuLabel className="md:hidden">Category</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-muted my-1.5 md:hidden" />
+              {categories.map((item) => (
+                <Fragment key={item}>
+                  <DropdownMenuItem
+                    onClick={() => handleCategoryChange(item)}
+                    className={`text-14 ${categoryQuery === item ? "bg-accent/50 font-bold" : ""}`}
+                  >
+                    {item}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-muted my-1.5 last:hidden" />
+                </Fragment>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </header>
+  );
+};
