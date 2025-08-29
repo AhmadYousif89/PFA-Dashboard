@@ -12,21 +12,22 @@ import { AccordionItem, AccordionContent, AccordionTrigger } from "@/components/
 
 import { BudgetDropdownMenu } from "./budget-menu";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
-import { Budget, ThemeColor, TransactionCategory } from "@/lib/types";
-import { getTransactionsByCategory } from "@/app/(dashboard)/shared-data/transactions";
+import { Budget, ThemeColor, Transaction, TransactionCategory } from "@/lib/types";
 
 type BudgetCardProps = {
   budget: Budget;
   selectedThemes: ThemeColor[];
   selectedCategories: TransactionCategory[];
+  categoryTransactions: Transaction[];
 };
 
 export const BudgetCard = async ({
   budget,
   selectedThemes,
   selectedCategories,
+  categoryTransactions,
 }: BudgetCardProps) => {
-  const transactions = await getTransactionsByCategory({ category: budget.category });
+  const transactions = categoryTransactions;
 
   const budgetSpent = transactions.reduce(
     (total, transaction) => total + Math.abs(transaction.amount),

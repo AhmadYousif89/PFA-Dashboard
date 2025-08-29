@@ -50,7 +50,7 @@ const SpendingItem = async ({ budget }: { budget: Budget }) => {
       </div>
       <div className="flex items-center gap-2">
         <span className={`text-base font-bold ${remaining < 0 ? "text-destructive" : ""}`}>
-          {formatCurrency(remaining)}
+          {formatCurrency(spent)}
         </span>
         <span className="text-muted-foreground text-xs">of {formatCurrency(maximum)}</span>
       </div>

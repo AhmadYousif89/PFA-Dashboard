@@ -1,14 +1,17 @@
+import { getBudgets } from "../shared-data/budget";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ViewTransitionWrapper } from "@/components/view-transition-wrapper";
 
 import { Budgets } from "./_components/budgets";
 import { SpendingSummary } from "./_components/spending-summary";
 import { BudgetCreationModal } from "./_components/create-budget-modal";
-import { getBudgetCategories, getBudgetThemes } from "../shared-data/budget";
 
 export default async function BudgetsPage() {
-  const selectedThemes = await getBudgetThemes();
-  const selectedCategories = await getBudgetCategories();
+  const budgets = await getBudgets();
+
+  const selectedThemes = budgets.map((b) => b.theme);
+  const selectedCategories = budgets.map((b) => b.category);
 
   return (
     <ViewTransitionWrapper>
