@@ -124,7 +124,7 @@ export const NavigationMenu = () => {
             </li>
           ))}
         </ul>
-        <div className="hidden min-h-35 w-full flex-col justify-center gap-4 px-8 xl:flex">
+        <div className="hidden min-h-65 w-full flex-col justify-center gap-4 px-8 xl:flex">
           <div className="group text-sidebar-foreground hover:text-sidebar-accent-foreground relative flex shrink-0 items-center gap-3 *:shrink-0">
             <button
               onClick={() => {

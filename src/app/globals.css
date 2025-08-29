@@ -79,7 +79,7 @@
 :root {
   --radius: 0.625rem;
   --app-width: 1440px;
-  --scroll-area-max-height: 1120px; /* Default max height for scroll areas on the xl: viewport*/
+  --scroll-area-max-height: 1050px; /* Default max height for scroll areas on the xl: viewport*/
 
   /* Base Colors */
   --background: oklch(1 0 0); /* White #FFFFFF */
