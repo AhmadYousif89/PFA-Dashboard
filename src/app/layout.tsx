@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Public_Sans } from "next/font/google";
 import "./globals.css";
-import Wrapper from "./wrapper";
 
 const publicSans = Public_Sans({
   subsets: ["latin"],
@@ -20,9 +19,7 @@ type Props = Readonly<{ children: React.ReactNode }>;
 export default function RootLayout({ children }: Props) {
   return (
     <html lang="en">
-      <body className={`${publicSans.variable} antialiased`}>
-        <Wrapper>{children}</Wrapper>
-      </body>
+      <body className={`${publicSans.variable} antialiased`}>{children}</body>
     </html>
   );
 }
