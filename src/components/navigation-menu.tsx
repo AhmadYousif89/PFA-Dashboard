@@ -12,6 +12,8 @@ import BudgetsIcon from "public/assets/images/icon-nav-budgets.svg";
 import PotsIcon from "public/assets/images/icon-nav-pots.svg";
 import BillsIcon from "public/assets/images/icon-nav-recurring-bills.svg";
 import MinimizeIcon from "public/assets/images/icon-minimize-menu.svg";
+import NarrowLayoutIcon from "public/assets/images/icon-narrow-layout.svg";
+import WideLayoutIcon from "public/assets/images/icon-wide-layout.svg";
 
 const navConfig = [
   {
@@ -48,12 +50,13 @@ const navConfig = [
 
 export const NavigationMenu = () => {
   const [navMenu, setNavMenu] = useState<"open" | "close">("open");
+  const [toggleView, setToggleView] = useState(true);
   const pathname = usePathname().replace("/", "");
 
   return (
     <div
       className={cn(
-        "@container/nav order-1 overflow-hidden xl:order-0",
+        "ring-background/5 @container/nav overflow-hidden xl:-order-1",
         "transition-[width] duration-250 ease-in-out will-change-[width]",
         navMenu === "open" ? "xl:w-75" : "xl:w-22",
       )}
@@ -65,9 +68,11 @@ export const NavigationMenu = () => {
           "@2xl/nav:min-h-18.5 @2xl/nav:px-10",
         )}
       >
-        <Link href="/" className="hidden w-full px-8 py-10 xl:block">
-          {navMenu === "open" ? <LogoLarge /> : <LogoSmall />}
-        </Link>
+        <span className="hidden w-full py-10 pr-6 xl:block">
+          <Link href="/" className="flex pl-8">
+            {navMenu === "open" ? <LogoLarge /> : <LogoSmall />}
+          </Link>
+        </span>
         <ul
           className={cn(
             "flex size-full items-center",
@@ -84,8 +89,7 @@ export const NavigationMenu = () => {
                 "xl:h-14 xl:rounded-tl-none xl:rounded-br-md",
                 "after:absolute after:bottom-0 after:h-1 after:w-full after:bg-transparent",
                 "xl:after:left-0 xl:after:h-full xl:after:w-1",
-                pathname === item.key &&
-                  "bg-sidebar-primary after:bg-sidebar-accent",
+                pathname === item.key && "bg-sidebar-primary after:bg-sidebar-accent",
               )}
             >
               <Link
@@ -106,17 +110,13 @@ export const NavigationMenu = () => {
                   {item.icon}
                 </span>
                 <span
-                  className={
-                    "text-12-bold xl:text-16 hidden whitespace-nowrap transition duration-250 xl:block @2xl/nav:block " +
-                    cn(
-                      pathname === item.key
-                        ? "text-sidebar-primary-foreground"
-                        : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground group-focus-within:text-sidebar-accent-foreground",
-                      navMenu === "open"
-                        ? "xl:visible xl:opacity-100"
-                        : "xl:invisible xl:opacity-0",
-                    )
-                  }
+                  className={cn(
+                    "hidden text-xs font-bold whitespace-nowrap transition duration-250 xl:block xl:text-base @2xl/nav:block",
+                    pathname === item.key
+                      ? "text-sidebar-primary-foreground"
+                      : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground group-focus-within:text-sidebar-accent-foreground",
+                    navMenu === "open" ? "xl:visible xl:opacity-100" : "xl:invisible xl:opacity-0",
+                  )}
                 >
                   {item.title}
                 </span>
@@ -124,30 +124,48 @@ export const NavigationMenu = () => {
             </li>
           ))}
         </ul>
-        <div className="hidden min-h-24 w-full px-8 py-4 xl:block">
-          <button
-            onClick={() =>
-              setNavMenu((state) => (state === "open" ? "close" : "open"))
-            }
-            className="group text-sidebar-foreground hover:text-sidebar-accent-foreground flex cursor-pointer items-center gap-4"
-          >
-            <MinimizeIcon
-              className={cn(
-                "group-hover:[&_path]:fill-sidebar-accent-foreground transition duration-250",
-                navMenu === "open" ? "" : "rotate-180",
-              )}
-            />
+        <div className="hidden min-h-35 w-full flex-col justify-center gap-4 px-8 xl:flex">
+          <div className="group text-sidebar-foreground hover:text-sidebar-accent-foreground relative flex shrink-0 items-center gap-3 *:shrink-0">
+            <button
+              onClick={() => {
+                setToggleView((state) => !state);
+                document.documentElement.style.setProperty(
+                  "--app-width",
+                  toggleView ? "100vw" : "1440px",
+                );
+              }}
+            >
+              {toggleView ? <NarrowLayoutIcon /> : <WideLayoutIcon />}
+              <span className="absolute inset-0 cursor-pointer" />
+            </button>
             <span
               className={cn(
                 "whitespace-nowrap transition duration-250",
-                navMenu === "open"
-                  ? "xl:visible xl:opacity-100"
-                  : "xl:invisible xl:opacity-0",
+                navMenu === "open" ? "xl:visible xl:opacity-100" : "xl:invisible xl:opacity-0",
+              )}
+            >
+              Toggle View
+            </span>
+          </div>
+          <div className="group text-sidebar-foreground hover:text-sidebar-accent-foreground relative flex shrink-0 items-center gap-4 *:shrink-0">
+            <button onClick={() => setNavMenu((state) => (state === "open" ? "close" : "open"))}>
+              <MinimizeIcon
+                className={cn(
+                  "group-hover:[&_path]:fill-sidebar-accent-foreground transition duration-250",
+                  navMenu === "open" ? "" : "rotate-180",
+                )}
+              />
+              <span className="absolute inset-0 cursor-pointer" />
+            </button>
+            <span
+              className={cn(
+                "whitespace-nowrap transition duration-250",
+                navMenu === "open" ? "xl:visible xl:opacity-100" : "xl:invisible xl:opacity-0",
               )}
             >
               Minimize Menu
             </span>
-          </button>
+          </div>
         </div>
       </nav>
     </div>
