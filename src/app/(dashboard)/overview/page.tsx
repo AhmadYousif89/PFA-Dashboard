@@ -13,7 +13,7 @@ import { AccountSummarySkeleton } from "./_skeletons/account-summary";
 import { BudgetsSummarySkeleton } from "./_skeletons/budgets-summary";
 import { TransactionsSummarySkeleton } from "./_skeletons/transactions-summary";
 
-export default function OverviewPage() {
+export default async function OverviewPage() {
   return (
     <ViewTransitionWrapper>
       <div className="@container/overview grid gap-8">
