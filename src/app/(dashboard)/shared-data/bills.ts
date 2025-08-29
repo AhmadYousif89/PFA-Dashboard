@@ -1,0 +1,293 @@
+import { cache } from "@/lib/cache";
+import connectToDatabase from "@/lib/db";
+import { Bill, Transaction, TransactionDocument, TransactionWithPaymentStatus } from "@/lib/types";
+import { getCurrentMonthRange, getCycleBoundsFromDueDay, nextMonthlyDue } from "../utils";
+
+type RecurringBillGroup = {
+  name: string;
+  lastPayment: Date;
+  avgAmount: number;
+};
+
+const addDateStage = { $addFields: { dateAsDate: { $dateFromString: { dateString: "$date" } } } };
+
+const _cachedComputeBillFlags = await cache(
+  async (now = new Date(), windowDays = 7) => {
+    const groups = await getRecurringBills(); // name, lastPayment, avgAmount
+
+    const dueSoon = new Set<string>();
+    const overdue = new Set<string>();
+    const paidThisCycle = new Set<string>();
+
+    const end = new Date(now);
+    end.setDate(now.getDate() + windowDays);
+
+    for (const g of groups) {
+      const dueDay = new Date(g.lastPayment).getDate();
+      const { cycleStart, nextDue } = getCycleBoundsFromDueDay(dueDay, now);
+
+      // Paid only if last payment happened within the current cycle window
+      const last = new Date(g.lastPayment);
+      const isPaid = last >= cycleStart && last < nextDue;
+      if (isPaid) {
+        paidThisCycle.add(g.name);
+        // Optional: skip flagging due soon/overdue when already paid
+        continue;
+      }
+
+      // Only unpaid bills get dueSoon/overdue flags
+      if (nextDue < now) {
+        overdue.add(g.name);
+      } else if (nextDue <= end) {
+        dueSoon.add(g.name);
+      }
+    }
+
+    return {
+      dueSoon: Array.from(dueSoon),
+      overdue: Array.from(overdue),
+      paidThisCycle: Array.from(paidThisCycle),
+    };
+  },
+  ["bills:flags:v2"], // bump key to avoid stale cache
+  { tags: ["transactions"], revalidate: 60 },
+);
+
+const _cachedBillsSummary = await cache(
+  async () => {
+    const summaryBillTitles = ["Paid Bills", "Total Upcoming", "Due Soon"] as const;
+
+    const [paid, upcoming, due] = await Promise.all([
+      calcTotalPaidBills(),
+      calcTotalUpcomingBills(),
+      calcTotalDueBills(),
+    ]);
+
+    const summary = summaryBillTitles.map((name, i) => {
+      const amount = i === 0 ? paid : i === 1 ? upcoming : due;
+      const bill = {
+        id: name.toLowerCase().replace(/\s+/g, "-"),
+        name,
+        amount,
+        theme:
+          i === 0 ? "var(--color-green)" : i === 1 ? "var(--color-yellow)" : "var(--color-cyan)",
+      } as Bill;
+      return bill;
+    });
+
+    return summary;
+  },
+  ["bills:summary"],
+  {
+    tags: ["bills"],
+    revalidate: 300, // Revalidate every 5 minutes
+  },
+);
+
+// Calculate total paid bills for current month
+async function calcTotalPaidBills() {
+  const { paidThisCycle } = await _cachedComputeBillFlags();
+  if (!Array.isArray(paidThisCycle) || paidThisCycle.length === 0) return 0;
+
+  const { db } = await connectToDatabase();
+  const { startOfMonth, endOfMonth } = getCurrentMonthRange();
+
+  const docs = await db
+    .collection<TransactionDocument>("transactions")
+    .aggregate<{ total: number }>([
+      addDateStage,
+      {
+        $match: {
+          category: "Bills",
+          name: { $in: paidThisCycle },
+          dateAsDate: { $gte: startOfMonth, $lt: endOfMonth },
+          amount: { $lt: 0 },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: { $abs: "$amount" } },
+        },
+      },
+    ])
+    .toArray();
+
+  return docs.length > 0 ? docs[0].total : 0;
+}
+
+// Calculate total upcoming bills (exclude paid, due soon, overdue)
+async function calcTotalUpcomingBills() {
+  const [summary, names] = await Promise.all([getBillsBreakdown(), getUpcomingUnpaidBillNames()]);
+  const upcoming = new Set(names);
+  let total = 0;
+  for (const b of summary) {
+    if (upcoming.has(b.name)) total += b.amount;
+  }
+  return total;
+}
+
+// Calculate total bills due soon or overdue (exclude paid)
+async function calcTotalDueBills() {
+  const [groups, names] = await Promise.all([getRecurringBills(), getDueBillNames()]);
+  const target = new Set(names);
+  let total = 0;
+  for (const g of groups) {
+    if (target.has(g.name)) total += g.avgAmount;
+  }
+  return total;
+}
+
+// Get summary of all bills
+export async function getBillsSummary() {
+  return await _cachedBillsSummary();
+}
+
+// Get count of all paid bills in the current month (all transactions, not unique)
+export async function getPaidBillsCount() {
+  const { paidThisCycle } = await _cachedComputeBillFlags();
+  return Array.isArray(paidThisCycle) ? paidThisCycle.length : 0;
+}
+
+// Get count of all upcoming bills (unique, unpaid, > 7 days out)
+export async function getUpcomingBillsCount() {
+  const names = await getUpcomingUnpaidBillNames();
+  return names.length;
+}
+
+// Get count of all due soon or overdue bills (unique, unpaid)
+export async function getDueBillsCount() {
+  const names = await getDueBillNames();
+  return names.length;
+}
+
+// Map of bill names to their next due day of the month i.e { "Electricity": 15 }
+async function getNextDueDayMap() {
+  const bills = await getRecurringBills();
+  const map: Record<string, number> = {};
+  for (const bill of bills) {
+    const nextDue = nextMonthlyDue(bill.lastPayment);
+    map[bill.name] = nextDue.getDate();
+  }
+  return map;
+}
+
+// Get recurring bills with their last payment date and average amount
+async function getRecurringBills(): Promise<RecurringBillGroup[]> {
+  const { db } = await connectToDatabase();
+  const docs = await db
+    .collection<TransactionDocument>("transactions")
+    .aggregate<RecurringBillGroup>([
+      addDateStage,
+      { $match: { category: "Bills", recurring: true, amount: { $lt: 0 } } },
+      { $sort: { dateAsDate: -1 } },
+      {
+        $group: {
+          _id: "$name",
+          lastPayment: { $first: "$dateAsDate" },
+          avgAmount: { $avg: { $abs: "$amount" } },
+        },
+      },
+      { $project: { _id: 0, name: "$_id", lastPayment: 1, avgAmount: 1 } },
+    ])
+    .toArray();
+
+  return docs;
+}
+
+// Return transactions marked with dueSoon and paid status
+export async function getBillTransactionsWithPaymentStatus(): Promise<
+  TransactionWithPaymentStatus[]
+> {
+  const base = await getBillTransactions();
+  const { dueSoon, overdue, paidThisCycle } = await _cachedComputeBillFlags();
+  const dueSoonSet = new Set<string>(Array.isArray(dueSoon) ? dueSoon : []);
+  const overdueSet = new Set<string>(Array.isArray(overdue) ? overdue : []);
+  const paidCycleSet = new Set<string>(Array.isArray(paidThisCycle) ? paidThisCycle : []);
+  const dueDayMap = await getNextDueDayMap();
+
+  return base.map((t) => ({
+    ...t,
+    paid: paidCycleSet.has(t.name),
+    dueSoon: dueSoonSet.has(t.name),
+    overdue: overdueSet.has(t.name),
+    dueDay: dueDayMap[t.name],
+  }));
+}
+
+// Get all bill transactions (category: "Bills")
+async function getBillTransactions() {
+  const { db } = await connectToDatabase();
+  const transactions = await db
+    .collection<TransactionDocument>("transactions")
+    .find({ category: "Bills" })
+    .sort({ date: -1 })
+    .toArray();
+
+  return transactions.map((transaction) => ({
+    id: transaction._id.toString(),
+    name: transaction.name,
+    date: transaction.date,
+    avatar: transaction.avatar,
+    category: transaction.category,
+    amount: Number(transaction.amount),
+    recurring: transaction.recurring,
+  })) satisfies Transaction[];
+}
+
+// Get count of bills due soon or overdue (exclude paid)
+async function getDueBillNames() {
+  const { dueSoon, overdue, paidThisCycle } = await _cachedComputeBillFlags();
+  const paid = new Set(Array.isArray(paidThisCycle) ? paidThisCycle : []);
+  const ds = Array.isArray(dueSoon) ? dueSoon : [];
+  const od = Array.isArray(overdue) ? overdue : [];
+  return Array.from(new Set([...ds, ...od].filter((n) => !paid.has(n))));
+}
+
+// Names of bills that are upcoming (unpaid, > 7 days out)
+async function getUpcomingUnpaidBillNames() {
+  const [summary, flags] = await Promise.all([
+    getBillsBreakdown(), // all bills (recurring + non-recurring)
+    _cachedComputeBillFlags(),
+  ]);
+
+  const allBillNames = Array.from(new Set(summary.map((b) => b.name)));
+  const paidThisCycle = new Set(Array.isArray(flags.paidThisCycle) ? flags.paidThisCycle : []);
+  const blocked = new Set([
+    ...(Array.isArray(flags.dueSoon) ? flags.dueSoon : []),
+    ...(Array.isArray(flags.overdue) ? flags.overdue : []),
+  ]);
+
+  const result: string[] = [];
+  for (const name of allBillNames) {
+    if (!paidThisCycle.has(name) && !blocked.has(name)) {
+      result.push(name);
+    }
+  }
+  return result;
+}
+
+// Get breakdown of all bills (recurring + non-recurring) with total amounts
+async function getBillsBreakdown() {
+  const { db } = await connectToDatabase();
+  const docs = await db
+    .collection<TransactionDocument>("transactions")
+    .aggregate<Bill>([
+      addDateStage,
+      { $match: { category: "Bills", amount: { $lt: 0 } } },
+      {
+        $group: {
+          _id: "$name",
+          amount: { $sum: { $abs: "$amount" } },
+        },
+      },
+      { $project: { _id: 0, name: "$_id", amount: 1 } },
+      { $sort: { name: 1 } },
+    ])
+    .toArray();
+
+  return docs.map((d) => ({
+    ...d,
+    id: d.name.toLowerCase().replace(/\s+/g, "-"),
+  }));
+}
