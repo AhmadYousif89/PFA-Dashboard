@@ -63,10 +63,14 @@ export const columns: ColumnDef<TransactionWithPaymentStatus>[] = [
     size: 150,
     minSize: 100,
     meta: { className: "align-bottom md:align-middle" },
+    sortingFn: (rowA, rowB, columnId) => {
+      const a = Math.abs(Number(rowA.getValue(columnId) ?? 0));
+      const b = Math.abs(Number(rowB.getValue(columnId) ?? 0));
+      return a === b ? 0 : a > b ? 1 : -1;
+    },
     cell: ({ row }) => {
       const data = row.original;
       const amount = Number(data.amount);
-
       return (
         <span
           className={cn(

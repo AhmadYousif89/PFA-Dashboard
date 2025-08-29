@@ -2,7 +2,7 @@ import { Fragment, useRef, useState, useTransition } from "react";
 
 import { cn } from "@/lib/utils";
 import { useUrlState } from "@/hooks/use-url-state";
-import { SortFormat, type TransactionSortKey } from "@/lib/types";
+import { SortFormat, TransactionSortKey } from "@/lib/types";
 
 import SpinnerIcon from "public/assets/images/icon-spinner.svg";
 import SearchIcon from "public/assets/images/icon-search.svg";
