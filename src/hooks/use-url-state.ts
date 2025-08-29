@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 export function useUrlState() {
@@ -8,32 +8,30 @@ export function useUrlState() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const params = useMemo(() => new URLSearchParams(searchParams.toString()), [searchParams]);
-
   const updateURL = useCallback(
     (updates: Record<string, string | null>) => {
-      const urlParams = params;
+      const urlParams = new URLSearchParams(searchParams.toString());
 
       Object.entries(updates).forEach(([key, value]) => {
-        if (value) {
-          urlParams.set(key, value);
-        } else {
-          urlParams.delete(key);
-        }
+        if (value) urlParams.set(key, value);
+        else urlParams.delete(key);
       });
 
-      const newURL = `${pathname}?${urlParams.toString()}`;
-      router.push(newURL, { scroll: true });
+      const current = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+      const next = `${pathname}${urlParams.toString() ? `?${urlParams.toString()}` : ""}`;
+
+      if (next === current) return; // no-op if unchanged
+      router.push(next, { scroll: true });
     },
-    [params, pathname, router],
+    [searchParams, pathname, router],
   );
 
   const getParam = useCallback(
     (key: string, defaultValue = "") => {
-      return params.get(key) ?? defaultValue;
+      return searchParams.get(key) ?? defaultValue;
     },
-    [params],
+    [searchParams],
   );
 
-  return { updateURL, getParam, searchParams: params };
+  return { updateURL, getParam };
 }
