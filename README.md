@@ -1,36 +1,117 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Personal Finance App
 
-## Getting Started
+A full‑stack personal finance dashboard built with Next.js App Router and MongoDB. Track transactions, budgets, pots (savings goals), and recurring bills with rich tables, charts, and keyboard‑accessible UI.
 
-First, run the development server:
+## Tech stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Next.js 15 (App Router) with React 19
+- TypeScript
+- Tailwind CSS v4 + tw-animate-css
+- Radix UI primitives
+- TanStack Table v8 (data table, sorting, filtering, pagination)
+- Recharts (charts)
+- MongoDB Node.js Driver v6
+- Zod (runtime env validation)
+- SVGR for importing SVGs as React components
+- ESLint + Prettier (with Tailwind plugin)
+
+## Features
+
+- Overview page summarizing balances, spending, categories, and charts
+- Transactions with search, sort, filtering, and pagination
+- Budgets CRUD (create/update/delete), with spend vs limit and category themes
+- Pots (savings goals) with add/withdraw actions and progress tracking
+- Recurring Bills summary with Paid/Upcoming/Due Soon logic for the current cycle (monthly)
+- Optimized data fetching via next/cache + tag-based revalidation
+- Keyboard‑navigable components and responsive layout
+
+## Project structure (high level)
+
+- src/app/(dashboard)/…: overview, transactions, budgets, pots, bills
+- src/app/(dashboard)/shared-data: DB-backed data access for each area
+- src/app/(dashboard)/budgets/\_actions: server actions for budgets CRUD
+- src/lib: db connection, caching helpers, config, types, utilities
+- src/components: UI components (tables, charts, dialogs, inputs, etc.)
+
+## Prerequisites
+
+- Node.js 18.18+ (or 20+)
+- MongoDB database (local or hosted)
+
+## Environment variables
+
+Create a .env file in the project root with:
+
+- MONGODB_URI: your MongoDB connection string
+- MONGODB_NAME: the database name
+
+The variables are validated at runtime using Zod (see src/lib/load-env.ts). Missing values will throw on boot.
+
+## Install and run
+
+Using pnpm (recommended):
+
+- pnpm install
+- pnpm dev
+
+Using npm:
+
+- npm install
+- npm run dev
+
+Build and start production server:
+
+- pnpm build && pnpm start
+
+Other scripts:
+
+- pnpm lint – run ESLint
+- pnpm prettier – format with Prettier
+
+## Data model (MongoDB collections)
+
+The app expects these collections and shapes (see src/lib/types.ts):
+
+```ts
+- balances: { current: number, income: number, expenses: number }
+- transactions: {
+  - avatar: string
+  - name: string
+  - category: one of filterCategories in src/lib/config.ts (e.g., "Bills", "Groceries", ...)
+  - date: ISO date string (YYYY-MM-DD)
+  - amount: number (negative for expenses, positive for income)
+  - recurring: boolean
+    }
+- budgets: { category: TransactionCategory, maximum: number, theme: CSS var string }
+- pots: { name: string, target: number, total: number, theme: CSS var string }
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Styling
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Tailwind CSS v4 is used
+- Design custom tokens (CSS variables) define theme, chart colors, and sidebar palette.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Screenshots
 
-## Learn More
+![Overview](public/screenshots/PFA-Overview.png)
+![Transactions](public/screenshots/PFA-Transactions.png)
+![Budgets](public/screenshots/PFA-Budgets.png)
+![Pots](public/screenshots/PFA-Pots.png)
+![Bills](public/screenshots/PFA-Bills.png)
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Set MONGODB_URI and MONGODB_NAME in your hosting provider’s environment settings.
+- Build with next build and run with next start (or your host’s adapter).
+- Ensure your MongoDB IP access list allows your host to connect.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
+Licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Author
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- This project was developed by Ahmad Yousif.
+
+- [Frontend Mentor](https://frontendmentor.io/profile/AhmadYousif89)
+- [GitHub](https://github.com/AhmadYousif89)
