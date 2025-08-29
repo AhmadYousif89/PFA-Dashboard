@@ -1,7 +1,7 @@
 "use client";
 
-import { ColumnDef, flexRender, Table as TableType } from "@tanstack/react-table";
 import { Fragment } from "react";
+import { ColumnDef, flexRender, Table as TableType } from "@tanstack/react-table";
 
 import {
   TableHeader,
@@ -13,22 +13,29 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "./ui/separator";
 
-import { TTransactionItem } from "@/lib/types";
+import { Transaction } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface DataTableProps<TData, TValue> {
-  table: TableType<TTransactionItem>;
+  table: TableType<Transaction>;
   columns: ColumnDef<TData, TValue>[];
 }
 
 export function DataTable<TData, TValue>({ table, columns }: DataTableProps<TData, TValue>) {
+  const tableHeaderGroups = table.getHeaderGroups();
+  const tableRows = table.getRowModel().rows;
   return (
     <Table>
       <TableHeader className="border-muted bg-accent sticky top-0 z-10 hidden border-b md:table-header-group">
-        {table.getHeaderGroups().map((headerGroup) => (
+        {tableHeaderGroups.map((headerGroup) => (
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
               return (
-                <TableHead key={header.id} style={{ width: header.getSize() }}>
+                <TableHead
+                  key={header.id}
+                  style={{ width: header.getSize() }}
+                  className={cn(header.column.columnDef.meta?.className)}
+                >
                   {header.isPlaceholder
                     ? null
                     : flexRender(header.column.columnDef.header, header.getContext())}
@@ -38,36 +45,42 @@ export function DataTable<TData, TValue>({ table, columns }: DataTableProps<TDat
           </TableRow>
         ))}
       </TableHeader>
-
       <TableBody>
         {/* Spacer row for gap between header and body */}
         <TableRow className="pointer-events-none hidden hover:bg-transparent md:table-row">
           <TableCell colSpan={columns.length} className="h-6 p-0"></TableCell>
         </TableRow>
-        {table.getRowModel().rows?.length ? (
-          table.getRowModel().rows.map((row) => (
+        {/* Main table rows */}
+        {tableRows.length ? (
+          tableRows.map((row) => (
             <Fragment key={row.id}>
-              <TableRow className="h-16.75" data-state={row.getIsSelected() && "selected"}>
+              <TableRow data-state={row.getIsSelected() && "selected"}>
                 {row.getVisibleCells().map((cell, index) => (
                   <TableCell
                     key={cell.id}
                     style={{ width: cell.column.getSize() }}
-                    className={index > 0 ? "table-cell max-md:not-last-of-type:hidden" : ""}
+                    className={cn(
+                      index > 0 ? "table-cell max-md:not-last:hidden" : "",
+                      cell.column.columnDef.meta?.className,
+                    )}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
+              {/* Separator row for gap between rows */}
               <TableRow className="pointer-events-none last:hidden hover:bg-transparent data-[state=selected]:bg-transparent">
-                <TableCell colSpan={columns.length}>
-                  <Separator className="bg-muted my-1" />
+                <TableCell colSpan={columns.length} className="p-0">
+                  <Separator className="bg-muted my-4" />
                 </TableCell>
               </TableRow>
             </Fragment>
           ))
         ) : (
           <TableRow>
-            <TableCell className="text-20 !text-left">No results.</TableCell>
+            <TableCell className="text-destructive !text-left text-sm font-bold">
+              No transactions found.
+            </TableCell>
           </TableRow>
         )}
       </TableBody>
