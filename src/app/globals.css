@@ -78,7 +78,7 @@
 
 :root {
   --radius: 0.625rem;
-  --app-width: 1440px;
+  --app-width: 90rem;
   --scroll-area-max-height: 1050px; /* Default max height for scroll areas on the xl: viewport*/
 
   /* Base Colors */
@@ -152,10 +152,11 @@
 
   @keyframes expandLeft {
     from {
-      width: 0%;
+      transform: scaleX(0);
+      transform-origin: left;
     }
     to {
-      width: var(--to-width, 0%);
+      transform: scaleX(1);
     }
   }
 

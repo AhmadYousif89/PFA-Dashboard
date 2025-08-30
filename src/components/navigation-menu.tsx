@@ -57,7 +57,7 @@ export const NavigationMenu = () => {
     <div
       className={cn(
         "ring-background/5 @container/nav overflow-hidden xl:-order-1",
-        "transition-[width] duration-250 ease-in-out will-change-[width]",
+        "transition-[width] duration-250 ease-in-out will-change-transform",
         navMenu === "open" ? "xl:w-75" : "xl:w-22",
       )}
     >

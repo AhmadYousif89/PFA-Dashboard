@@ -82,9 +82,10 @@ export const BudgetCard = async ({
                 {
                   backgroundColor: budget.theme,
                   "--to-width": `${remainingPercentage}%`,
+                  width: `${remainingPercentage}%`,
                 } as React.CSSProperties
               }
-              className="animate-expand-left h-2 min-h-6 w-0 rounded-xs will-change-[width]"
+              className="animate-expand-left h-2 min-h-6 w-0 origin-left rounded-xs will-change-transform"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">

@@ -52,9 +52,10 @@ export const PotCard = ({ pot, selectedThemes }: PotCardProps) => {
                 {
                   backgroundColor: pot.theme,
                   "--to-width": `${remainingPercentage}%`,
+                  width: `${remainingPercentage}%`,
                 } as React.CSSProperties
               }
-              className="animate-expand-left h-2 rounded"
+              className="animate-expand-left h-2 origin-left rounded"
             />
           </div>
           <div className="text-muted-foreground flex items-center justify-between gap-4">
