@@ -55,14 +55,11 @@ export function DataTable<TData, TValue>({ table, columns }: DataTableProps<TDat
           tableRows.map((row) => (
             <Fragment key={row.id}>
               <TableRow data-state={row.getIsSelected() && "selected"}>
-                {row.getVisibleCells().map((cell, index) => (
+                {row.getVisibleCells().map((cell) => (
                   <TableCell
                     key={cell.id}
                     style={{ width: cell.column.getSize() }}
-                    className={cn(
-                      index > 0 ? "table-cell max-md:not-last:hidden" : "",
-                      cell.column.columnDef.meta?.className,
-                    )}
+                    className={cn(cell.column.columnDef.meta?.className)}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
