@@ -11,7 +11,7 @@ export async function getPotsThemes() {
   return pots.map((pot) => pot.theme);
 }
 
-const _cachedPots = await cache(
+const _cachedPots = cache(
   async (limit: number) => {
     const { db } = await connectToDatabase();
     const pots = await db

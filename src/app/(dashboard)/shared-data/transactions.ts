@@ -9,7 +9,7 @@ export async function getTransactions({
   return _cachedTransactions(limit, category);
 }
 
-const _cachedTransactions = await cache(
+const _cachedTransactions = cache(
   async (limit, category) => {
     const { db } = await connectToDatabase();
     const transactions = await db

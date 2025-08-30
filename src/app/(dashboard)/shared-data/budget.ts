@@ -8,7 +8,7 @@ import {
 } from "@/lib/types";
 import { cache } from "@/lib/cache";
 
-const _cachedBudgets = await cache(
+const _cachedBudgets = cache(
   async () => {
     const { db } = await connectToDatabase();
     const budgets = await db
@@ -79,7 +79,7 @@ export async function calculateBudgetLimit() {
 
 type GetBudgetTransactionsMapOptions = { limit?: number };
 
-const _cachedBudgetTransactionsMap = await cache(
+const _cachedBudgetTransactionsMap = cache(
   async (limit: number) => {
     const categories = await getBudgetCategories();
     if (categories.length === 0) return {} as Record<TransactionCategory, Transaction[]>;

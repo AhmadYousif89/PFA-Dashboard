@@ -2,7 +2,7 @@ import { cache as reactCache } from "react";
 import { unstable_cache as nextCache } from "next/cache";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function cache<T extends (...args: any[]) => any>(
+export function cache<T extends (...args: any[]) => any>(
   cb: T,
   keyParts?: string[],
   options?: {
