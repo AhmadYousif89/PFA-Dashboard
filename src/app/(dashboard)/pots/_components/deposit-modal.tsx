@@ -147,7 +147,7 @@ export const DepositPotModal = ({ pot }: PotCardProps) => {
             />
           </fieldset>
           <ButtonWithFormState type="submit" className="min-h-13.5">
-            Confirm Addition
+            Confirm Deposit
           </ButtonWithFormState>
         </FormWithActionState>
       </DialogContent>

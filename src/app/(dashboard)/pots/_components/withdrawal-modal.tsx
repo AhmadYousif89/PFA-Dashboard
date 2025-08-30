@@ -128,7 +128,7 @@ export const WithdrawMoneyModal = ({ pot }: PotCardProps) => {
               onValueChange={handleAmountChange}
             />
           </fieldset>
-          <ButtonWithFormState className="min-h-13.5">Confirm Addition</ButtonWithFormState>
+          <ButtonWithFormState className="min-h-13.5">Confirm Withdrawal</ButtonWithFormState>
         </FormWithActionState>
       </DialogContent>
     </Dialog>
