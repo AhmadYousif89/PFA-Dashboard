@@ -49,8 +49,9 @@ export const columns: ColumnDef<TransactionWithPaymentStatus>[] = [
   {
     accessorKey: "date",
     header: "Due Date",
-    size: 150,
-    minSize: 100,
+    size: 200,
+    minSize: 150,
+    meta: { className: "hidden md:table-cell" },
     cell: ({ row }) => {
       const data = row.original;
       const day = data.dueDay ?? transactionDay(data.date);
@@ -62,7 +63,7 @@ export const columns: ColumnDef<TransactionWithPaymentStatus>[] = [
     header: "Amount",
     size: 150,
     minSize: 100,
-    meta: { className: "align-bottom md:align-middle" },
+    meta: { className: "font-bold align-bottom md:align-middle " },
     sortingFn: (rowA, rowB, columnId) => {
       const a = Math.abs(Number(rowA.getValue(columnId) ?? 0));
       const b = Math.abs(Number(rowB.getValue(columnId) ?? 0));
@@ -73,10 +74,7 @@ export const columns: ColumnDef<TransactionWithPaymentStatus>[] = [
       const amount = Number(data.amount);
       return (
         <span
-          className={cn(
-            "text-right font-bold",
-            data.paid ? "text-green" : data.overdue || data.dueSoon ? "text-red" : "",
-          )}
+          className={cn(data.paid ? "text-green" : data.overdue || data.dueSoon ? "text-red" : "")}
         >
           {formatCurrency(amount, { minimumFractionDigits: 2, signDisplay: "never" })}
         </span>

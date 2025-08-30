@@ -36,6 +36,7 @@ export const columns: ColumnDef<Transaction>[] = [
     header: "Category",
     size: 150,
     minSize: 100,
+    meta: { className: "hidden md:table-cell" },
     cell: ({ row }) => (
       <span className="text-muted-foreground text-xs">{row.getValue("category")}</span>
     ),
@@ -45,6 +46,7 @@ export const columns: ColumnDef<Transaction>[] = [
     header: "Transaction Date",
     size: 150,
     minSize: 100,
+    meta: { className: "hidden md:table-cell" },
     cell: ({ row }) => (
       <span className="text-muted-foreground text-xs">{formatDate(row.getValue("date"))}</span>
     ),
