@@ -78,6 +78,7 @@ export async function editPotAction(prevState: unknown, formData: FormData) {
     }
 
     revalidatePath("/pots");
+    revalidatePath("/overview");
     return { success: true, message: "Pot updated successfully" };
   } catch (error) {
     console.error("Edit pot action failed:", error);
