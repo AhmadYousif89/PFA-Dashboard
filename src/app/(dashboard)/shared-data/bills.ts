@@ -1,7 +1,7 @@
 import { cache } from "@/lib/cache";
 import connectToDatabase from "@/lib/db";
 import { Bill, Transaction, TransactionDocument, TransactionWithPaymentStatus } from "@/lib/types";
-import { getCurrentMonthRange, getCycleBoundsFromDueDay, nextMonthlyDue } from "../utils";
+import { getCycleBoundsFromDueDay, nextMonthlyDue } from "../utils";
 
 type RecurringBillGroup = {
   name: string;

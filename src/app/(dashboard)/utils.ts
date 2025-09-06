@@ -1,33 +1,14 @@
-export function getCurrentMonthRange(now = new Date()) {
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1); // First of this month
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1); // First of next month
-  return { startOfMonth, endOfMonth };
-}
-
 export function nextMonthlyDue(lastPayment: Date) {
   const d = new Date(lastPayment);
   d.setMonth(d.getMonth() + 1);
   return d;
 }
 
-export function isWithinDays(from: Date, target: Date, days: number) {
-  const end = new Date(from);
-  end.setDate(from.getDate() + days);
-  return target >= from && target <= end;
-}
-
-export function norm(n: string) {
-  return (n ?? "")
-    .toLowerCase()
-    .trim()
-    .replace(/[\s._-]+/g, "")
-    .replace(/[^a-z0-9]/g, "");
-}
-
-// Build cycle window from due day anchored to "now"
+// Returns the number of days in a given month
 function daysInMonth(y: number, m: number) {
   return new Date(y, m + 1, 0).getDate();
 }
+// Return a date with the given year, month, and day of month,
 function dateWithDOM(y: number, m: number, d: number) {
   return new Date(y, m, Math.min(d, daysInMonth(y, m)));
 }
