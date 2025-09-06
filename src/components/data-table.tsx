@@ -24,6 +24,7 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({ table, columns }: DataTableProps<TData, TValue>) {
   const tableHeaderGroups = table.getHeaderGroups();
   const tableRows = table.getRowModel().rows;
+
   return (
     <Table>
       <TableHeader className="border-muted bg-accent sticky top-0 z-10 hidden border-b md:table-header-group">

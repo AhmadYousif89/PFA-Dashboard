@@ -22,7 +22,7 @@ export const TransactionTable = ({ transactions }: TransactionTableProps) => {
       className="h-full grow gap-6 px-5 md:p-8 xl:max-h-[calc(100dvh-8.5rem)]"
     >
       <DataTableToolbar />
-      <DataTable columns={[]} table={table} />
+      <DataTable columns={columns} table={table} />
       <DataTablePagination table={table} />
     </Card>
   );
