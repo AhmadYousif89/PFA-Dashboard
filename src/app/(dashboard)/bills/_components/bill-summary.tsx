@@ -14,6 +14,7 @@ import { Fragment } from "react";
 
 export const BillsSummary = async () => {
   const summary = await getBillsSummary();
+
   const billsTotal = summary.reduce((total, bill) => total + bill.amount, 0);
 
   const paidBillsCount = await getPaidBillsCount();

@@ -1,6 +1,6 @@
 export function getCurrentMonthRange(now = new Date()) {
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1); // First of this month
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1); // First of next month
   return { startOfMonth, endOfMonth };
 }
 

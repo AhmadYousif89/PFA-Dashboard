@@ -6,6 +6,7 @@ import { getCurrentMonthRange, getCycleBoundsFromDueDay, nextMonthlyDue } from "
 type RecurringBillGroup = {
   name: string;
   lastPayment: Date;
+  lastAmount: number;
   avgAmount: number;
 };
 
@@ -147,16 +148,17 @@ async function getRecurringBills(): Promise<RecurringBillGroup[]> {
     .collection<TransactionDocument>("transactions")
     .aggregate<RecurringBillGroup>([
       addDateStage,
-      { $match: { category: "Bills", recurring: true, amount: { $lt: 0 } } },
+      { $match: { category: CATEGORY_BILLS, recurring: true, amount: { $lt: 0 } } },
       { $sort: { dateAsDate: -1 } },
       {
         $group: {
           _id: "$name",
           lastPayment: { $first: "$dateAsDate" },
+          lastAmount: { $first: { $abs: "$amount" } },
           avgAmount: { $avg: { $abs: "$amount" } },
         },
       },
-      { $project: { _id: 0, name: "$_id", lastPayment: 1, avgAmount: 1 } },
+      { $project: { _id: 0, name: "$_id", lastPayment: 1, lastAmount: 1, avgAmount: 1 } },
     ])
     .toArray();
 
@@ -166,33 +168,20 @@ async function getRecurringBills(): Promise<RecurringBillGroup[]> {
 // Calculate total paid bills for current month
 async function calcTotalPaidBills() {
   const { paidThisCycle } = await _cachedComputeBillFlags();
-  if (!Array.isArray(paidThisCycle) || paidThisCycle.length === 0) return 0;
+  if (!Array.isArray(paidThisCycle) || paidThisCycle.length === 0) {
+    return 0;
+  }
 
-  const { db } = await connectToDatabase();
-  const { startOfMonth, endOfMonth } = getCurrentMonthRange();
+  const groups = await _cachedRecurringBills();
+  const paidSet = new Set(paidThisCycle);
 
-  const docs = await db
-    .collection<TransactionDocument>("transactions")
-    .aggregate<{ total: number }>([
-      addDateStage,
-      {
-        $match: {
-          category: CATEGORY_BILLS,
-          name: { $in: paidThisCycle },
-          dateAsDate: { $gte: startOfMonth, $lt: endOfMonth },
-          amount: { $lt: 0 },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: { $abs: "$amount" } },
-        },
-      },
-    ])
-    .toArray();
-
-  return docs.length > 0 ? docs[0].total : 0;
+  let total = 0;
+  for (const g of groups) {
+    if (paidSet.has(g.name)) {
+      total += g.lastAmount ?? g.avgAmount ?? 0;
+    }
+  }
+  return total;
 }
 
 // Calculate total upcoming bills (exclude paid, due soon, overdue)
