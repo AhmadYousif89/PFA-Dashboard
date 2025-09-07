@@ -1,22 +1,26 @@
 import { Fragment } from "react";
 
-import {
-  getBudgets,
-  getSpendingByCategory,
-  calculateBudgetLimit,
-  calculateBudgetSpendings,
-} from "@/app/(dashboard)/shared-data/budget";
-import { Budget } from "@/lib/types";
+import { getBudgets, getSpendingByCategoryMap } from "@/app/(dashboard)/shared-data/budget";
 import { formatCurrency } from "@/lib/utils";
+import { Budget } from "@/lib/types";
 
 import { Separator } from "@/components/ui/separator";
 import { BudgetChart } from "@/components/budget-chart";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const SpendingSummary = async () => {
-  const budgets = await getBudgets();
-  const totalBudgetLimit = await calculateBudgetLimit();
-  const totalBudgetSpent = await calculateBudgetSpendings();
+  const [budgets, spendingMap] = await Promise.all([getBudgets(), getSpendingByCategoryMap()]);
+  const totalBudgetSpent = Object.values(spendingMap).reduce((sum, v) => sum + v, 0);
+  const totalBudgetLimit = budgets.reduce((sum, b) => sum + b.maximum, 0);
+
+  if (budgets.length === 0) {
+    return (
+      <Card className="p-5 md:p-8">
+        <h2 className="text-lg font-bold">Spending Summary</h2>
+        <p className="text-muted-foreground text-sm">You have not set any budget yet</p>
+      </Card>
+    );
+  }
 
   return (
     <Card className="gap-8 md:flex-row md:p-8 lg:@xl:flex-col">
@@ -27,7 +31,7 @@ export const SpendingSummary = async () => {
         <ul className="flex flex-col">
           {budgets.map((budget) => (
             <Fragment key={budget.category}>
-              <SpendingItem budget={budget} />
+              <SpendingItem budget={budget} spent={spendingMap[budget.category] ?? 0} />
               <Separator className="bg-muted my-4 last:hidden" />
             </Fragment>
           ))}
@@ -37,9 +41,8 @@ export const SpendingSummary = async () => {
   );
 };
 
-const SpendingItem = async ({ budget }: { budget: Budget }) => {
+const SpendingItem = ({ budget, spent }: { budget: Budget; spent: number }) => {
   const { category, maximum, theme } = budget;
-  const spent = await getSpendingByCategory(category);
   const remaining = maximum - spent;
 
   return (

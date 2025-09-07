@@ -1,16 +1,12 @@
-import {
-  getBudgets,
-  calculateBudgetLimit,
-  calculateBudgetSpendings,
-} from "@/app/(dashboard)/shared-data/budget";
 import { cn, formatCurrency } from "@/lib/utils";
 import { BudgetChart } from "@/components/budget-chart";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getBudgets, getSpendingByCategoryMap } from "@/app/(dashboard)/shared-data/budget";
 
 export const BudgetsSummary = async () => {
-  const budgets = await getBudgets();
-  const totalBudgetLimit = await calculateBudgetLimit();
-  const totalBudgetSpent = await calculateBudgetSpendings();
+  const [budgets, spendingMap] = await Promise.all([getBudgets(), getSpendingByCategoryMap()]);
+  const totalBudgetSpent = Object.values(spendingMap).reduce((sum, v) => sum + v, 0);
+  const totalBudgetLimit = budgets.reduce((sum, b) => sum + b.maximum, 0);
 
   if (budgets.length === 0) {
     return <p className="text-muted-foreground text-sm">You have not set any budget yet</p>;

@@ -36,51 +36,13 @@ export async function getBudgets() {
   return _cachedBudgets();
 }
 
-export async function getBudgetCategories() {
+async function getBudgetCategories() {
   const budgets = await getBudgets();
   return budgets.map((budget) => budget.category);
 }
 
-export async function getSpendingByCategory(category: TransactionCategory) {
-  const { db } = await connectToDatabase();
-  const transactions = await db
-    .collection<TransactionDocument>("transactions")
-    .find({ category })
-    .toArray();
-
-  if (!transactions || transactions.length === 0) {
-    return 0;
-  }
-
-  const totalSpent = transactions
-    .filter((item) => item.amount < 0)
-    .reduce((sum, item) => sum + Math.abs(item.amount), 0);
-  return totalSpent;
-}
-
-// Calculate total spending for all transactions that took place in budget categories
-export async function calculateBudgetSpendings() {
-  const transactions = await getBudgetTransactionsMap();
-  let totalSpent = 0;
-
-  for (const txs of Object.values(transactions)) {
-    totalSpent += txs
-      .filter((item) => item.amount < 0)
-      .reduce((sum, item) => sum + Math.abs(item.amount), 0);
-  }
-
-  return totalSpent;
-}
-
-export async function calculateBudgetLimit() {
-  const budgets = await getBudgets();
-  return budgets.reduce((sum, budget) => sum + budget.maximum, 0);
-}
-
-type GetBudgetTransactionsMapOptions = { limit?: number };
-
 const _cachedBudgetTransactionsMap = cache(
-  async (limit: number) => {
+  async () => {
     const categories = await getBudgetCategories();
     if (categories.length === 0) return {} as Record<TransactionCategory, Transaction[]>;
 
@@ -112,20 +74,46 @@ const _cachedBudgetTransactionsMap = cache(
       grouped[key].push(t);
     }
 
-    if (limit > 0) {
-      for (const key of Object.keys(grouped) as TransactionCategory[]) {
-        grouped[key] = grouped[key].slice(0, limit);
-      }
-    }
-
     return grouped;
   },
   ["BudgetTransactionsMap"],
   { revalidate: 60 }, // revalidate every 1 minute
 );
 
-export async function getBudgetTransactionsMap({
-  limit = 0,
-}: GetBudgetTransactionsMapOptions = {}) {
-  return _cachedBudgetTransactionsMap(limit);
+export async function getBudgetTransactionsMap({ limit = 0 }: { limit?: number }) {
+  const result = await _cachedBudgetTransactionsMap();
+  if (limit <= 0) return result;
+
+  const limited: Record<TransactionCategory, Transaction[]> = Object.create(null);
+  for (const key of Object.keys(result) as TransactionCategory[]) {
+    limited[key] = result[key].slice(0, limit);
+  }
+  return limited;
+}
+
+const _cachedSpendingsByCategoryMap = cache(
+  async () => {
+    const categories = await getBudgetCategories();
+    if (categories.length === 0) return {} as Record<TransactionCategory, number>;
+
+    const { db } = await connectToDatabase();
+    const results = await db
+      .collection<TransactionDocument>("transactions")
+      .aggregate([
+        { $match: { category: { $in: categories }, amount: { $lt: 0 } } },
+        { $group: { _id: "$category", total: { $sum: { $abs: "$amount" } } } },
+      ])
+      .toArray();
+
+    const map: Record<TransactionCategory, number> = Object.create(null);
+    for (const cat of categories) map[cat] = 0;
+    for (const r of results) map[r._id as TransactionCategory] = Number(r.total) || 0;
+    return map;
+  },
+  ["SpendingsByCategoryMap"],
+  { revalidate: 60 },
+);
+
+export async function getSpendingByCategoryMap() {
+  return _cachedSpendingsByCategoryMap();
 }
