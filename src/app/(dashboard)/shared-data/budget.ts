@@ -28,8 +28,8 @@ const _cachedBudgets = cache(
       theme: budget.theme,
     })) satisfies Budget[];
   },
-  ["GET_BUDGETS"],
-  { revalidate: 300 }, // 5 minutes
+  ["BudgetList"],
+  { revalidate: 60 }, // revalidate every 1 minute
 );
 
 export async function getBudgets() {
@@ -120,8 +120,8 @@ const _cachedBudgetTransactionsMap = cache(
 
     return grouped;
   },
-  ["getBudgetTransactionsMap"],
-  { tags: ["transactions", "budgets"], revalidate: 600 },
+  ["BudgetTransactionsMap"],
+  { revalidate: 60 }, // revalidate every 1 minute
 );
 
 export async function getBudgetTransactionsMap({
