@@ -52,15 +52,16 @@ export async function createPotAction(prevState: unknown, formData: FormData) {
     const collection = db.collection<PotDocument>("pots");
     const result = await collection.insertOne(newPot);
 
-    if (result.acknowledged) {
-      revalidatePath("/pots");
-      return {
-        success: true,
-        message: "Pot created successfully",
-      };
-    } else {
+    if (!result.acknowledged) {
       throw new Error("Failed to create new pot");
     }
+
+    revalidatePath("/pots");
+    revalidatePath("/overview");
+    return {
+      success: true,
+      message: "Pot created successfully",
+    };
   } catch (error) {
     console.error("Error creating pot:", error);
     return {
