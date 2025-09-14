@@ -14,16 +14,13 @@ const CATEGORY_BILLS = "Bills";
 const DEFAULT_WINDOW_DAYS = 7;
 
 // Cache reusable aggregations
-const _cachedRecurringBills = cache(getRecurringBills, ["bills:recurring"], {
-  tags: ["transactions"],
-  revalidate: 60,
-});
+const _cachedRecurringBills = cache(getRecurringBills, ["Bills:Recurring"], { revalidate: 60 });
 
 const addDateStage = { $addFields: { dateAsDate: { $dateFromString: { dateString: "$date" } } } };
 
 const _cachedComputeBillFlags = cache(
   async (now = new Date(), windowDays = DEFAULT_WINDOW_DAYS) => {
-    const groups = await _cachedRecurringBills(); // {name, lastPayment, avgAmount}[]
+    const groups = await _cachedRecurringBills(); // { name, lastPayment, avgAmount }[]
 
     const dueSoon = new Set<string>();
     const overdue = new Set<string>();
@@ -45,7 +42,6 @@ const _cachedComputeBillFlags = cache(
         paidThisCycle.add(g.name);
         continue;
       }
-
       // Only unpaid bills get dueSoon/overdue flags
       if (nextDue < now) {
         overdue.add(g.name);
@@ -62,8 +58,8 @@ const _cachedComputeBillFlags = cache(
       dueDayMap,
     };
   },
-  ["bills:flags"],
-  { tags: ["transactions"], revalidate: 60 },
+  ["Bills:Flags"],
+  { revalidate: 60 },
 );
 
 const _cachedBillsSummary = cache(
@@ -90,11 +86,8 @@ const _cachedBillsSummary = cache(
 
     return summary;
   },
-  ["bills:summary"],
-  {
-    tags: ["bills", "transactions"],
-    revalidate: 300, // Revalidate every 5 minutes
-  },
+  ["Bills:Summary"],
+  { revalidate: 300 }, // revalidate every 5 minutes
 );
 
 // Get summary of all bills
@@ -257,32 +250,3 @@ async function getUpcomingUnpaidBillNames() {
   }
   return result;
 }
-
-// Get breakdown of all bills (recurring + non-recurring) with total amounts
-// async function getBillsBreakdown() {
-//   const { db } = await connectToDatabase();
-//   const docs = await db
-//     .collection<TransactionDocument>("transactions")
-//     .aggregate<Bill>([
-//       { $match: { category: "Bills", amount: { $lt: 0 } } },
-//       {
-//         $group: {
-//           _id: "$name",
-//           amount: { $sum: { $abs: "$amount" } },
-//         },
-//       },
-//       { $project: { _id: 0, name: "$_id", amount: 1 } },
-//       { $sort: { name: 1 } },
-//     ])
-//     .toArray();
-
-//   return docs.map((d) => ({
-//     ...d,
-//     id: d.name.toLowerCase().replace(/\s+/g, "-"),
-//   }));
-// }
-
-// const _cachedBillsBreakdown = cache(getBillsBreakdown, ["bills:breakdown"], {
-//   tags: ["transactions"],
-//   revalidate: 300,
-// });

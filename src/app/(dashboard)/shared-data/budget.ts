@@ -28,7 +28,7 @@ const _cachedBudgets = cache(
       theme: budget.theme,
     })) satisfies Budget[];
   },
-  ["BudgetList"],
+  ["Budgets"],
   { revalidate: 60 }, // revalidate every 1 minute
 );
 
@@ -76,8 +76,8 @@ const _cachedBudgetTransactionsMap = cache(
 
     return grouped;
   },
-  ["BudgetTransactionsMap"],
-  { revalidate: 60 }, // revalidate every 1 minute
+  ["Budgets:TransactionMap"],
+  { revalidate: 60 },
 );
 
 export async function getBudgetTransactionsMap({ limit = 0 }: { limit?: number }) {
@@ -110,7 +110,7 @@ const _cachedSpendingsByCategoryMap = cache(
     for (const r of results) map[r._id as TransactionCategory] = Number(r.total) || 0;
     return map;
   },
-  ["SpendingsByCategoryMap"],
+  ["Budgets:SpendingMap"],
   { revalidate: 60 },
 );
 

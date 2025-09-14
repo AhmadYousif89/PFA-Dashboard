@@ -33,11 +33,8 @@ const _cachedPots = cache(
       theme: pot.theme,
     })) satisfies Pot[];
   },
-  ["getPots"],
-  {
-    tags: ["pots"],
-    revalidate: 300, // 5 minutes
-  },
+  ["Pots"],
+  { revalidate: 60 },
 );
 
 // Calculates the total amount saved across all pots

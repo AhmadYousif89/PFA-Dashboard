@@ -35,9 +35,6 @@ const _cachedTransactions = cache(
       recurring: transaction.recurring,
     })) satisfies Transaction[];
   },
-  ["getTransactions"],
-  {
-    tags: ["transactions"],
-    revalidate: 600,
-  },
+  ["Transactions"],
+  { revalidate: 300 }, // revalidate every 5 minutes
 );
