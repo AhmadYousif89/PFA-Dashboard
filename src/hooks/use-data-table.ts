@@ -13,15 +13,15 @@ import {
 } from "@tanstack/react-table";
 
 import { TransactionCategory, SortFormat } from "@/lib/types";
-import { useUrlState } from "./use-url-state";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useUrlState } from "./use-url-state";
 
 export function useDataTable<TData, TValue>(data: TData[], columns: ColumnDef<TData, TValue>[]) {
   const { getParam } = useUrlState();
 
   const currentQuery = getParam("query") || "";
   const currentSort = (getParam("sort") as SortFormat) || "";
-  const currentCategory = (getParam("category") as TransactionCategory) || "All Transactions";
+  const currentCategory = (getParam("category") as TransactionCategory) || "all-transactions";
   const page = getParam("page") ? Number(getParam("page")) : 1;
 
   const [sorting, setSorting] = useState<SortingState>(() => {
@@ -32,7 +32,7 @@ export function useDataTable<TData, TValue>(data: TData[], columns: ColumnDef<TD
     return [];
   });
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(() => {
-    if (currentCategory && currentCategory !== "All Transactions") {
+    if (currentCategory && currentCategory !== "all-transactions") {
       return [{ id: "category", value: currentCategory }];
     }
     return [];
@@ -102,10 +102,10 @@ export function useDataTable<TData, TValue>(data: TData[], columns: ColumnDef<TD
   }, [getParam]);
 
   useEffect(() => {
-    const urlCategory = (getParam("category") as TransactionCategory) || "All Transactions";
+    const urlCategory = (getParam("category") as TransactionCategory) || "all-transactions";
     const currentCategoryFilter = columnFilters.find((filter) => filter.id === "category");
 
-    if (urlCategory === "All Transactions") {
+    if (urlCategory === "all-transactions") {
       if (currentCategoryFilter) {
         setColumnFilters((prev) => prev.filter((filter) => filter.id !== "category"));
       }

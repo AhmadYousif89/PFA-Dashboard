@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { filterCategories, sortBy, sortMap } from "@/lib/config";
+import { CATEGORY_SLUGS, CategorySlug, getCategoryLabel, sortBy, sortMap } from "@/lib/config";
 
 type Props = {
   hideCategoryFilter?: boolean;
@@ -59,9 +59,9 @@ export const DataTableToolbar = ({ hideCategoryFilter = false }: Props) => {
     }
   };
 
-  const handleCategoryChange = (category: (typeof filterCategories)[number]) => {
+  const handleCategoryChange = (category: (typeof CATEGORY_SLUGS)[number]) => {
     updateURL({
-      category: category === "All Transactions" ? null : category,
+      category: category === "all-transactions" ? null : category,
       page: null,
     });
   };
@@ -186,13 +186,13 @@ export const DataTableToolbar = ({ hideCategoryFilter = false }: Props) => {
               >
                 <DropdownMenuLabel className="md:hidden">Category</DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-muted my-1.5 md:hidden" />
-                {filterCategories.map((item) => (
+                {CATEGORY_SLUGS.map((item) => (
                   <Fragment key={item}>
                     <DropdownMenuItem
                       onClick={() => handleCategoryChange(item)}
                       className={`text-sm ${categoryQuery === item ? "bg-accent/50 font-bold" : ""}`}
                     >
-                      {item}
+                      {getCategoryLabel(item)}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-muted my-1.5 last:hidden" />
                   </Fragment>
