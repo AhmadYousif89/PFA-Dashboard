@@ -2,6 +2,8 @@ import { cache } from "@/lib/cache";
 import connectToDatabase from "@/lib/db";
 import { Bill, Transaction, TransactionDocument, TransactionWithPaymentStatus } from "@/lib/types";
 import { getCycleBoundsFromDueDay, nextMonthlyDue } from "../utils";
+import { CategorySlug } from "@/lib/config";
+import { DEMO_USER_ID } from "./scoped-user";
 
 type RecurringBillGroup = {
   name: string;
@@ -10,7 +12,7 @@ type RecurringBillGroup = {
   avgAmount: number;
 };
 
-const CATEGORY_BILLS = "Bills";
+const CATEGORY_BILLS: CategorySlug = "bills";
 const DEFAULT_WINDOW_DAYS = 7;
 
 // Cache reusable aggregations
@@ -141,7 +143,14 @@ async function getRecurringBills(): Promise<RecurringBillGroup[]> {
     .collection<TransactionDocument>("transactions")
     .aggregate<RecurringBillGroup>([
       addDateStage,
-      { $match: { category: CATEGORY_BILLS, recurring: true, amount: { $lt: 0 } } },
+      {
+        $match: {
+          userId: DEMO_USER_ID,
+          category: CATEGORY_BILLS,
+          recurring: true,
+          amount: { $lt: 0 },
+        },
+      },
       { $sort: { dateAsDate: -1 } },
       {
         $group: {
@@ -204,7 +213,7 @@ async function getBillTransactions() {
   const { db } = await connectToDatabase();
   const transactions = await db
     .collection<TransactionDocument>("transactions")
-    .find({ category: CATEGORY_BILLS })
+    .find({ userId: DEMO_USER_ID, category: CATEGORY_BILLS })
     .sort({ date: -1 })
     .toArray();
 

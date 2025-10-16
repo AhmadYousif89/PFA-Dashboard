@@ -1,6 +1,7 @@
 import { cache } from "@/lib/cache";
 import connectToDatabase from "@/lib/db";
 import { Pot, PotDocument } from "@/lib/types";
+import { DEMO_USER_ID } from "./scoped-user";
 
 export async function getPots({ limit = 0 } = {}) {
   return _cachedPots(limit);
@@ -16,7 +17,7 @@ const _cachedPots = cache(
     const { db } = await connectToDatabase();
     const pots = await db
       .collection<PotDocument>("pots")
-      .find({})
+      .find({ userId: DEMO_USER_ID })
       .limit(limit)
       .sort({ createdAt: -1 })
       .toArray();
