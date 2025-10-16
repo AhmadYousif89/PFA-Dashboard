@@ -13,6 +13,7 @@ import { AccordionItem, AccordionContent, AccordionTrigger } from "@/components/
 import { BudgetDropdownMenu } from "./budget-menu";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { Budget, ThemeColor, Transaction, TransactionCategory } from "@/lib/types";
+import { getCategoryLabel } from "@/lib/config";
 
 type BudgetCardProps = {
   budget: Budget;
@@ -36,6 +37,8 @@ export const BudgetCard = async ({
   const budgetRemaining = budget.maximum - budgetSpent;
   const remainingPercentage = budgetRemaining < 0 ? 100 : (budgetSpent / budget.maximum) * 100;
 
+  const catLable = getCategoryLabel(budget.category);
+
   return (
     <AccordionItem
       value={`card-${budget.id}`}
@@ -49,7 +52,7 @@ export const BudgetCard = async ({
             style={{ backgroundColor: budget.theme }}
             className="aspect-square size-4 rounded-full"
           />
-          <h2 className="text-lg font-bold">{budget.category}</h2>
+          <h2 className="text-lg font-bold">{catLable}</h2>
         </CardTitle>
         <CardAction className="flex items-center self-end">
           <BudgetDropdownMenu

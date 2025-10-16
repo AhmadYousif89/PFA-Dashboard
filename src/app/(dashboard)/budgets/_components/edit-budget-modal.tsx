@@ -6,7 +6,7 @@ import { MaxSpendingInput } from "./max-spending-input";
 import CloseIcon from "public/assets/images/icon-close-modal.svg";
 
 import { cn, getThemeKey } from "@/lib/utils";
-import { budgetCategories, themeColors } from "@/lib/config";
+import { budgetCategories, getCategoryLabel, themeColors } from "@/lib/config";
 import { Budget, ThemeColor, TransactionCategory } from "@/lib/types";
 import { useBlockOutsideInteractionOnTouch } from "@/hooks/use-block-outside-interaction";
 
@@ -97,6 +97,7 @@ export const EditBudgetModal = ({
               </SelectTrigger>
               <SelectContent onTouchEnd={onTouchEnd}>
                 {budgetCategories.map((category) => {
+                  const catLabel = getCategoryLabel(category);
                   if (selectedCategories.includes(category)) {
                     return (
                       <Fragment key={category}>
@@ -105,7 +106,7 @@ export const EditBudgetModal = ({
                           value={category}
                           className={cn(budget.category === category && "bg-accent")}
                         >
-                          <span>{category}</span>
+                          <span>{catLabel}</span>
                           <small
                             className={cn(
                               "absolute right-2 text-xs",
@@ -122,7 +123,7 @@ export const EditBudgetModal = ({
                   return (
                     <Fragment key={category}>
                       <SelectItem value={category}>
-                        <span>{category}</span>
+                        <span>{catLabel}</span>
                       </SelectItem>
                       <SelectSeparator className="last:hidden" />
                     </Fragment>

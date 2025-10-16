@@ -7,13 +7,14 @@ import {
   TransactionCategory,
 } from "@/lib/types";
 import { cache } from "@/lib/cache";
+import { DEMO_USER_ID } from "./scoped-user";
 
 const _cachedBudgets = cache(
   async () => {
     const { db } = await connectToDatabase();
     const budgets = await db
       .collection<BudgetDocument>("budgets")
-      .find()
+      .find({ userId: DEMO_USER_ID })
       .sort({ createdAt: -1 })
       .toArray();
 
@@ -23,6 +24,7 @@ const _cachedBudgets = cache(
 
     return budgets.map((budget) => ({
       id: budget._id.toString(),
+      userId: budget.userId?.toString(),
       category: budget.category satisfies TransactionCategory,
       maximum: Number(budget.maximum),
       theme: budget.theme,
@@ -49,7 +51,7 @@ const _cachedBudgetTransactionsMap = cache(
     const { db } = await connectToDatabase();
     const txs = await db
       .collection<TransactionDocument>("transactions")
-      .find({ category: { $in: categories } })
+      .find({ userId: DEMO_USER_ID, category: { $in: categories } })
       .sort({ date: -1 })
       .toArray();
 
@@ -59,6 +61,7 @@ const _cachedBudgetTransactionsMap = cache(
 
     const mappedTxs = txs.map((t) => ({
       id: t._id.toString(),
+      userId: t.userId?.toString(),
       name: t.name,
       date: t.date,
       amount: Number(t.amount),
@@ -100,7 +103,7 @@ const _cachedSpendingsByCategoryMap = cache(
     const results = await db
       .collection<TransactionDocument>("transactions")
       .aggregate([
-        { $match: { category: { $in: categories }, amount: { $lt: 0 } } },
+        { $match: { userId: DEMO_USER_ID, category: { $in: categories }, amount: { $lt: 0 } } },
         { $group: { _id: "$category", total: { $sum: { $abs: "$amount" } } } },
       ])
       .toArray();

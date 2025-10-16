@@ -7,7 +7,7 @@ import CloseIcon from "public/assets/images/icon-close-modal.svg";
 import { createBudgetAction } from "../_actions/create";
 import { MaxSpendingInput } from "./max-spending-input";
 
-import { budgetCategories, themeColors } from "@/lib/config";
+import { budgetCategories, getCategoryLabel, themeColors } from "@/lib/config";
 import { ThemeColor, TransactionCategory } from "@/lib/types";
 import { useBlockOutsideInteractionOnTouch } from "@/hooks/use-block-outside-interaction";
 
@@ -93,11 +93,12 @@ export const BudgetCreationModal = ({
               </SelectTrigger>
               <SelectContent onTouchEnd={onTouchEnd}>
                 {budgetCategories.map((category) => {
+                  const catLabel = getCategoryLabel(category);
                   if (selectedCategories.includes(category)) {
                     return (
                       <Fragment key={category}>
                         <SelectItem value={category} disabled className="group">
-                          <span>{category}</span>
+                          <span>{catLabel}</span>
                           <small className="bg-popover group-data-[highlighted]:bg-accent absolute right-2 text-xs">
                             Already used
                           </small>
@@ -109,7 +110,7 @@ export const BudgetCreationModal = ({
                   return (
                     <Fragment key={category}>
                       <SelectItem value={category} className="data-[state=checked]:bg-accent">
-                        <span>{category}</span>
+                        <span>{catLabel}</span>
                       </SelectItem>
                       <SelectSeparator className="last:hidden" />
                     </Fragment>

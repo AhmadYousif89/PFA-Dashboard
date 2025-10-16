@@ -17,6 +17,7 @@ import { ButtonWithFormState } from "@/components/button-with-form-state";
 
 import CloseIcon from "public/assets/images/icon-close-modal.svg";
 import { FormWithActionState } from "@/components/form-with-action-state";
+import { getCategoryLabel } from "@/lib/config";
 
 type DeleteBudgetModalProps = {
   budget: Budget;
@@ -31,14 +32,12 @@ const initialState = {
 
 export const DeleteBudgetModal = ({ budget, open, onOpenChange }: DeleteBudgetModalProps) => {
   const closeDialogRef = useRef<HTMLButtonElement | null>(null);
-
+  const catLabel = getCategoryLabel(budget.category);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="md:min-w-[35rem] md:p-8">
         <DialogHeader className="flex-row items-center justify-between">
-          <DialogTitle className="text-lg font-bold md:text-xl">
-            Delete ‘{budget.category}’
-          </DialogTitle>
+          <DialogTitle className="text-lg font-bold md:text-xl">Delete ‘{catLabel}’</DialogTitle>
           <Button variant="ghost" size="icon" className="rounded-full" asChild>
             <DialogClose ref={closeDialogRef}>
               <span className="sr-only">Close Modal</span>

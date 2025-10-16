@@ -2,6 +2,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { BudgetChart } from "@/components/budget-chart";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getBudgets, getSpendingByCategoryMap } from "@/app/(dashboard)/shared-data/budget";
+import { getCategoryLabel } from "@/lib/config";
 
 export const BudgetsSummary = async () => {
   const [budgets, spendingMap] = await Promise.all([getBudgets(), getSpendingByCategoryMap()]);
@@ -33,7 +34,7 @@ export const BudgetsSummary = async () => {
               <span className="min-h-11 min-w-1 rounded" style={{ backgroundColor: item.theme }} />
               <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground text-xs whitespace-nowrap">
-                  {item.category}
+                  {getCategoryLabel(item.category)}
                 </span>
                 <span className="text-sm font-bold">{formatCurrency(item.maximum)}</span>
               </div>
