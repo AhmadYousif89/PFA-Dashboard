@@ -4,11 +4,12 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
 import connectToDatabase from "@/lib/db";
-import { themeColors, filterCategories } from "@/lib/config";
+import { themeColors, CATEGORY_SLUGS } from "@/lib/config";
 import { BudgetDocument, ThemeColor, TransactionCategory } from "@/lib/types";
+import { DEMO_USER_ID } from "../../shared-data/scoped-user";
 
 const schema = z.object({
-  category: z.enum(filterCategories, { error: "Invalid category selected" }),
+  category: z.enum(CATEGORY_SLUGS, { error: "Invalid category selected" }),
   maximum: z
     .string()
     .refine((val) => /^\d+(\.\d{1,2})?$/.test(val), {
@@ -47,7 +48,7 @@ export async function createBudgetAction(prevState: unknown, formData: FormData)
 
     const { db } = await connectToDatabase();
     const collection = db.collection<BudgetDocument>("budgets");
-    const result = await collection.insertOne(newBudget);
+    const result = await collection.insertOne({ userId: DEMO_USER_ID, ...newBudget });
 
     if (result.acknowledged) {
       revalidatePath("/budgets");

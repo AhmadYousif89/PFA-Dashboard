@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import connectToDatabase from "@/lib/db";
 import { BudgetDocument } from "@/lib/types";
+import { DEMO_USER_ID } from "../../shared-data/scoped-user";
 
 export async function deleteBudgetAction(prevState: unknown, budgetId: string) {
   if (!budgetId) throw new Error("Missing budget ID");
@@ -13,9 +14,12 @@ export async function deleteBudgetAction(prevState: unknown, budgetId: string) {
   try {
     const { db } = await connectToDatabase();
     const collection = db.collection<BudgetDocument>("budgets");
-    const result = await collection.deleteOne({ _id: new ObjectId(budgetId) });
+    const result = await collection.findOneAndDelete({
+      userId: DEMO_USER_ID,
+      _id: new ObjectId(budgetId),
+    });
 
-    if (result.deletedCount === 0) {
+    if (!result) {
       throw new Error("Budget not found or already deleted");
     }
 

@@ -5,12 +5,13 @@ import { ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
 
 import connectToDatabase from "@/lib/db";
-import { themeColors, filterCategories } from "@/lib/config";
+import { themeColors, CATEGORY_SLUGS } from "@/lib/config";
 import { BudgetDocument, ThemeColor, TransactionCategory } from "@/lib/types";
+import { DEMO_USER_ID } from "../../shared-data/scoped-user";
 
 const schema = z.object({
   category: z
-    .enum(filterCategories, {
+    .enum(CATEGORY_SLUGS, {
       error: "Please select a category that is not already used",
     })
     .nullable(),
@@ -49,7 +50,10 @@ export async function editBudgetAction(prevState: unknown, formData: FormData) {
 
     const { db } = await connectToDatabase();
     const collection = db.collection<BudgetDocument>("budgets");
-    const existingBudget = await collection.findOne({ _id: new ObjectId(budgetId) });
+    const existingBudget = await collection.findOne({
+      userId: DEMO_USER_ID,
+      _id: new ObjectId(budgetId),
+    });
 
     if (!existingBudget) {
       return { success: false, message: "Budget not found or has been deleted" };
@@ -73,7 +77,7 @@ export async function editBudgetAction(prevState: unknown, formData: FormData) {
     }
 
     const result = await collection.updateOne(
-      { _id: new ObjectId(budgetId) },
+      { userId: DEMO_USER_ID, _id: new ObjectId(budgetId) },
       { $set: updatedBudget },
     );
 
