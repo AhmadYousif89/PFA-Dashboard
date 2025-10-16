@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 
 import connectToDatabase from "@/lib/db";
 import { BalanceDocument, PotDocument } from "@/lib/types";
+import { DEMO_USER_ID } from "../../shared-data/scoped-user";
 
 const schema = z.object({
   withdrawal: z
@@ -36,29 +37,29 @@ export async function withdrawalFromPotAction(prevState: unknown, formData: Form
 
     try {
       const potRes = await potsCol.updateOne(
-        { _id: new ObjectId(potId), total: { $gte: withdrawalAmount } },
+        { userId: DEMO_USER_ID, _id: new ObjectId(potId), total: { $gte: withdrawalAmount } },
         { $inc: { total: -withdrawalAmount } },
       );
 
       if (potRes.modifiedCount !== 1) {
-        return { success: false, message: "Insufficient funds in pot" };
+        throw new Error("Insufficient funds in pot for this withdrawal");
       }
 
-      const balanceRes = await balancesCol.updateOne({}, { $inc: { current: withdrawalAmount } });
+      const balanceRes = await balancesCol.updateOne(
+        { userId: DEMO_USER_ID },
+        { $inc: { current: withdrawalAmount } },
+      );
       if (balanceRes.modifiedCount !== 1) {
         // Rollback pot update if balance update fails
         await potsCol.updateOne(
-          { _id: new ObjectId(potId) },
+          { userId: DEMO_USER_ID, _id: new ObjectId(potId) },
           { $inc: { total: withdrawalAmount } },
         );
-        return { success: false, message: "Failed to update balance" };
+        throw new Error("Failed to update balance with withdrawal amount");
       }
     } catch (error) {
       console.error("Withdrawal transaction error:", error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Transaction failed",
-      };
+      throw error;
     }
 
     revalidatePath("/pots");

@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import connectToDatabase from "@/lib/db";
 import { themeColors } from "@/lib/config";
 import { PotDocument, ThemeColor } from "@/lib/types";
+import { DEMO_USER_ID } from "../../shared-data/scoped-user";
 
 const schema = z.object({
   name: z
@@ -42,15 +43,17 @@ export async function editPotAction(prevState: unknown, formData: FormData) {
 
     const { db } = await connectToDatabase();
     const collection = db.collection<PotDocument>("pots");
-    const existingPot = await collection.findOne({ _id: new ObjectId(potId) });
+    const existingPot = await collection.findOne({
+      userId: DEMO_USER_ID,
+      _id: new ObjectId(potId),
+    });
 
     if (!existingPot) throw new Error("Pot not found");
 
     const newTarget = data.target;
     if (newTarget != undefined && newTarget < existingPot.total) {
       throw new Error(
-        `Target cannot be less than the current total of ${existingPot.total}, 
-        Please increase the target or withdraw funds first.`,
+        `Target cannot be less than the current pot total of ${existingPot.total.toFixed(2)}`,
       );
     }
 
@@ -71,7 +74,10 @@ export async function editPotAction(prevState: unknown, formData: FormData) {
       return { success: true, message: "No changes made to the pot" };
     }
 
-    const result = await collection.updateOne({ _id: new ObjectId(potId) }, { $set: updatedPot });
+    const result = await collection.updateOne(
+      { userId: DEMO_USER_ID, _id: new ObjectId(potId) },
+      { $set: updatedPot },
+    );
 
     if (!result.acknowledged) {
       throw new Error("Failed to update pot");

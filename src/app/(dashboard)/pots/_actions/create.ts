@@ -5,6 +5,7 @@ import connectToDatabase from "@/lib/db";
 import { ThemeColor, PotDocument } from "@/lib/types";
 import { themeColors } from "@/lib/config";
 import { revalidatePath } from "next/cache";
+import { DEMO_USER_ID } from "../../shared-data/scoped-user";
 
 const schema = z.object({
   name: z
@@ -50,7 +51,7 @@ export async function createPotAction(prevState: unknown, formData: FormData) {
 
     const { db } = await connectToDatabase();
     const collection = db.collection<PotDocument>("pots");
-    const result = await collection.insertOne(newPot);
+    const result = await collection.insertOne({ userId: DEMO_USER_ID, ...newPot });
 
     if (!result.acknowledged) {
       throw new Error("Failed to create new pot");

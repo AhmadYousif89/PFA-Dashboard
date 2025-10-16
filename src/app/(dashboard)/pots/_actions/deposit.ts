@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 
 import connectToDatabase from "@/lib/db";
 import { BalanceDocument, PotDocument } from "@/lib/types";
+import { DEMO_USER_ID } from "../../shared-data/scoped-user";
 
 const schema = z.object({
   deposit: z
@@ -37,15 +38,15 @@ export async function depositToPotAction(prevState: unknown, formData: FormData)
 
       // Decrement balance.current only if enough funds
       const decRes = await balancesCol.updateOne(
-        { current: { $gte: depositAmount } },
+        { userId: DEMO_USER_ID, current: { $gte: depositAmount } },
         { $inc: { current: -depositAmount } },
       );
 
       if (decRes.modifiedCount !== 1) {
-        return { success: false, message: "Insufficient funds in balance" };
+        throw new Error("Insufficient balance for this deposit");
       }
 
-      const potRes = await potsCol.updateOne({ _id: new ObjectId(potId) }, [
+      const potRes = await potsCol.updateOne({ userId: DEMO_USER_ID, _id: new ObjectId(potId) }, [
         {
           $set: {
             total: { $add: [{ $ifNull: ["$total", 0] }, depositAmount] },
@@ -70,15 +71,12 @@ export async function depositToPotAction(prevState: unknown, formData: FormData)
 
       if (potRes.modifiedCount !== 1) {
         // Compensate balance if pot update failed
-        await balancesCol.updateOne({}, { $inc: { current: depositAmount } });
-        return { success: false, message: "Failed to update pot" };
+        await balancesCol.updateOne({ userId: DEMO_USER_ID }, { $inc: { current: depositAmount } });
+        throw new Error("Failed to deposit to pot");
       }
     } catch (error) {
       console.error("Deposit transaction error:", error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Transaction failed",
-      };
+      throw error;
     }
 
     revalidatePath("/pots");
