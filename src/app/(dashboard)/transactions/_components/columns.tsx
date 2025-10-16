@@ -5,6 +5,7 @@ import { ColumnDef } from "@tanstack/react-table";
 
 import { Transaction } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { getCategoryLabel } from "@/lib/config";
 
 export const columns: ColumnDef<Transaction>[] = [
   {
@@ -25,7 +26,9 @@ export const columns: ColumnDef<Transaction>[] = [
           />
           <div className="flex flex-col gap-1 text-left">
             <h3 className="text-sm font-bold">{data.name}</h3>
-            <span className="text-muted-foreground text-xs md:hidden">{data.category}</span>
+            <span className="text-muted-foreground text-xs md:hidden">
+              {getCategoryLabel(data.category)}
+            </span>
           </div>
         </div>
       );
@@ -38,7 +41,9 @@ export const columns: ColumnDef<Transaction>[] = [
     minSize: 100,
     meta: { className: "hidden md:table-cell" },
     cell: ({ row }) => (
-      <span className="text-muted-foreground text-xs">{row.getValue("category")}</span>
+      <span className="text-muted-foreground text-xs">
+        {getCategoryLabel(row.getValue("category"))}
+      </span>
     ),
   },
   {

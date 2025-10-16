@@ -1,6 +1,7 @@
 import { cache } from "@/lib/cache";
 import connectToDatabase from "@/lib/db";
 import { Transaction, TransactionCategory, TransactionDocument } from "@/lib/types";
+import { DEMO_USER_ID } from "./scoped-user";
 
 export async function getTransactions({
   limit = 0,
@@ -15,6 +16,7 @@ const _cachedTransactions = cache(
     const transactions = await db
       .collection<TransactionDocument>("transactions")
       .find({
+        userId: DEMO_USER_ID,
         ...(category ? { category } : {}),
       })
       .sort({ date: -1 })
@@ -25,16 +27,17 @@ const _cachedTransactions = cache(
       return [];
     }
 
-    return transactions.map((transaction) => ({
-      id: transaction._id.toString(),
-      name: transaction.name,
-      date: transaction.date,
-      amount: Number(transaction.amount),
-      avatar: transaction.avatar,
-      category: transaction.category,
-      recurring: transaction.recurring,
+    return transactions.map((t) => ({
+      id: t._id.toString(),
+      userId: t.userId?.toString(),
+      name: t.name,
+      date: t.date,
+      amount: Number(t.amount),
+      avatar: t.avatar,
+      category: t.category,
+      recurring: t.recurring,
     })) satisfies Transaction[];
   },
   ["Transactions"],
-  { revalidate: 300 }, // revalidate every 5 minutes
+  { revalidate: 60 },
 );
