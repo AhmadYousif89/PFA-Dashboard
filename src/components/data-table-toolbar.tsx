@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { CATEGORY_SLUGS, CategorySlug, getCategoryLabel, sortBy, sortMap } from "@/lib/config";
+import { CATEGORY_SLUGS, getCategoryLabel, sortBy, sortMap } from "@/lib/config";
 
 type Props = {
   hideCategoryFilter?: boolean;
