@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { themeColors, filterCategories, sortBy } from "./config";
+import { themeColors, CATEGORY_SLUGS, sortBy } from "./config";
 
 interface DBDocument {
   _id?: string | ObjectId;
@@ -24,12 +24,14 @@ export type Budget = BaseType<BudgetT>;
 export type Transaction = BaseType<TransactionT>;
 
 type BalanceT = {
+  userId?: ObjectId | string;
   current: number;
   income: number;
   expenses: number;
 };
 
 type PotT = {
+  userId?: ObjectId | string;
   name: string;
   target: number;
   total: number;
@@ -43,12 +45,14 @@ type BillT = {
 };
 
 type BudgetT = {
+  userId?: ObjectId | string;
   category: TransactionCategory;
   maximum: number;
   theme: ThemeColor;
 };
 
 type TransactionT = {
+  userId?: ObjectId | string;
   avatar: string;
   name: string;
   category: TransactionCategory;
@@ -63,7 +67,7 @@ export type SortFormat = `${SortByKey}:${SortByOrder}`;
 export type ThemeColorKey = keyof typeof themeColors;
 export type ThemeColor = (typeof themeColors)[ThemeColorKey];
 export type TransactionSortKey = (typeof sortBy)[number];
-export type TransactionCategory = (typeof filterCategories)[number];
+export type TransactionCategory = (typeof CATEGORY_SLUGS)[number];
 export type TransactionWithPaymentStatus = Transaction & {
   paid?: boolean;
   dueSoon?: boolean;

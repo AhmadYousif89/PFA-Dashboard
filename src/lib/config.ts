@@ -1,7 +1,9 @@
 import { ChartConfig } from "@/components/ui/chart";
 import { SortFormat, TransactionSortKey } from "./types";
 
-export const filterCategories = [
+export type CategoryLabel = (typeof CATEGORIES)[number];
+export type CategorySlug = (typeof CATEGORY_SLUGS)[number];
+export const CATEGORIES = [
   "All Transactions",
   "Entertainment",
   "Bills",
@@ -15,7 +17,39 @@ export const filterCategories = [
   "General",
 ] as const;
 
-export const budgetCategories = filterCategories.filter((c) => c !== "All Transactions");
+export const CATEGORY_SLUGS = [
+  "all-transactions",
+  "entertainment",
+  "bills",
+  "groceries",
+  "dining-out",
+  "transportation",
+  "personal-care",
+  "education",
+  "lifestyle",
+  "shopping",
+  "general",
+] as const;
+
+export const categoryLabels: Record<CategorySlug, CategoryLabel> = {
+  "all-transactions": "All Transactions",
+  entertainment: "Entertainment",
+  bills: "Bills",
+  groceries: "Groceries",
+  "dining-out": "Dining Out",
+  transportation: "Transportation",
+  "personal-care": "Personal Care",
+  education: "Education",
+  lifestyle: "Lifestyle",
+  shopping: "Shopping",
+  general: "General",
+} as const;
+
+export const budgetCategories = CATEGORY_SLUGS.filter((c) => c !== "all-transactions");
+
+export function getCategoryLabel(slug: (typeof CATEGORY_SLUGS)[number]) {
+  return categoryLabels[slug];
+}
 
 export const sortBy = ["Latest", "Oldest", "A to Z", "Z to A", "Highest", "Lowest"] as const;
 export const sortMap: { [key in TransactionSortKey]: SortFormat | null } = {
